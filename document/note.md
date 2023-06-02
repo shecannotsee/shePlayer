@@ -21,6 +21,7 @@ make install
 还需要安装依赖
 
 ```bash
-sudo apt-get install manpages-posix manpages-posix-dev
+sudo apt-get install zlib1g-dev
 ```
 
+并且需要在链接时加上libz库
