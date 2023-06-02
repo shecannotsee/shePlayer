@@ -25,7 +25,7 @@ int main() {
   AVFormatContext	*pFormatCtx;
   int				i, videoindex;
   AVCodecContext	*pCodecCtx;
-  AVCodec			*pCodec;
+  const AVCodec			*pCodec;
   AVFrame	*pFrame,*pFrameYUV;
   AVPacket *packet;
   struct SwsContext *img_convert_ctx;
@@ -38,9 +38,9 @@ int main() {
 
   FILE *fp_yuv;
   int ret, got_picture;
-  char filepath[]="./xx.mp4";
+  char filepath[]="bigbuckbunny_480x272.h265";
 
-  av_register_all();
+//  av_register_all();
   avformat_network_init();
 
   pFormatCtx = avformat_alloc_context();
@@ -55,7 +55,7 @@ int main() {
   }
   videoindex=-1;
   for(i=0; i<pFormatCtx->nb_streams; i++)
-    if(pFormatCtx->streams[i]->codec->codec_type==AVMEDIA_TYPE_VIDEO){
+    if(pFormatCtx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO){
       videoindex=i;
       break;
     }
@@ -63,7 +63,18 @@ int main() {
     printf("Didn't find a video stream.\n");
     return -1;
   }
-  pCodecCtx=pFormatCtx->streams[videoindex]->codec;
+
+  pCodecCtx = avcodec_alloc_context3(NULL);
+  if (!pCodecCtx) {
+    printf("Failed to allocate AVCodecContext.\n");
+    return -1;
+  }
+
+  ret = avcodec_parameters_to_context(pCodecCtx, pFormatCtx->streams[videoindex]->codecpar);
+  if (ret < 0) {
+    printf("Failed to copy codec parameters to context.\n");
+    return -1;
+  }
   pCodec=avcodec_find_decoder(pCodecCtx->codec_id);
   if(pCodec==NULL){
     printf("Codec not found.\n");
@@ -123,16 +134,29 @@ int main() {
 
   SDL_WM_SetCaption("Simplest FFmpeg Player",NULL);
 
-  img_convert_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height, PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
+  img_convert_ctx = sws_getContext(pCodecCtx->width, pCodecCtx->height, pCodecCtx->pix_fmt, pCodecCtx->width, pCodecCtx->height, AV_PIX_FMT_YUV420P, SWS_BICUBIC, NULL, NULL, NULL);
   //------------------------------
   while(av_read_frame(pFormatCtx, packet)>=0){
     if(packet->stream_index==videoindex){
       //Decode
-      ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet);
-      if(ret < 0){
-        printf("Decode Error.\n");
-        return -1;
+
+
+      ret = avcodec_send_packet(pCodecCtx, packet);
+      if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
+        av_packet_unref(packet);
+        return 1;
       }
+      //从解码器返回解码输出数据
+      ret = avcodec_receive_frame(pCodecCtx, pFrame);
+      if (ret < 0 && ret != AVERROR_EOF) {
+        av_packet_unref(packet);
+        return 1;
+      }
+//      ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet);
+//      if(ret < 0){
+//        printf("Decode Error.\n");
+//        return -1;
+//      }
       if(got_picture){
         SDL_LockYUVOverlay(bmp);
         pFrameYUV->data[0]=bmp->pixels[0];
@@ -157,16 +181,29 @@ int main() {
         SDL_Delay(40);
       }
     }
-    av_free_packet(packet);
+    av_packet_unref(packet);
   }
 
   //FIX: Flush Frames remained in Codec
   while (1) {
-    ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet);
-    if (ret < 0)
-      break;
-    if (!got_picture)
-      break;
+    ret = avcodec_send_packet(pCodecCtx, packet);
+    if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF)
+    {
+      av_packet_unref(packet);
+      return 1;
+    }
+    //从解码器返回解码输出数据
+    ret = avcodec_receive_frame(pCodecCtx, pFrame);
+    if (ret < 0 && ret != AVERROR_EOF)
+    {
+      av_packet_unref(packet);
+      return 1;
+    }
+//      ret = avcodec_decode_video2(pCodecCtx, pFrame, &got_picture, packet);
+//      if(ret < 0){
+//        printf("Decode Error.\n");
+//        return -1;
+//      }
     sws_scale(img_convert_ctx, (const uint8_t* const*)pFrame->data, pFrame->linesize, 0, pCodecCtx->height, pFrameYUV->data, pFrameYUV->linesize);
 
     SDL_LockYUVOverlay(bmp);
