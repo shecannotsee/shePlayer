@@ -64,9 +64,9 @@ file(GLOB_RECURSE TEST_SRC "${CMAKE_SOURCE_DIR}/test/*")
 add_executable(${test_name} ${TEST_SRC} ${SRC})
 target_link_libraries(${test_name} "-pthread"
         -Wl,--start-group
-        avcodec avfilter avformat avutil swresample swscale
+        avcodec avfilter avformat avutil avdevice swresample swscale
         -Wl,--end-group
-        z
+        z zvbi
         )
 
 # lib target
