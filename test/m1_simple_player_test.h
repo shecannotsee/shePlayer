@@ -83,6 +83,7 @@ int main() {
   }
 
   // Allocate video frame and initialize buffer for decoded frame
+  // 分配视频帧并为解码帧初始化缓冲区
   AVFrame* frame = av_frame_alloc();
   AVFrame* frameRGB = av_frame_alloc();
   if (!frame || !frameRGB) {
@@ -106,6 +107,7 @@ int main() {
   av_image_fill_arrays(frameRGB->data, frameRGB->linesize, buffer, AV_PIX_FMT_RGB24, codecContext->width, codecContext->height, 1);
 
   // Initialize SwsContext for color conversion
+  // 初始化 SwsContext 以进行颜色转换
   SwsContext* swsContext = sws_getContext(codecContext->width, codecContext->height, codecContext->pix_fmt,
                                           codecContext->width, codecContext->height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nullptr, nullptr, nullptr);
   if (!swsContext) {
@@ -119,13 +121,17 @@ int main() {
   }
 
   // Read frames from the input file and decode
-  AVPacket packet;
-  av_init_packet(&packet);
+  // 从输入文件中读取帧并解码
+  AVPacket* packet = av_packet_alloc();
+  if (!packet) {
+    std::cerr << "Failed to allocate packet" << std::endl;
+    // 处理内存分配失败的情况
+  }
 
-  while (av_read_frame(formatContext, &packet) >= 0) {
-    if (packet.stream_index == videoStreamIndex) {
+  while (av_read_frame(formatContext, packet) >= 0) {
+    if (packet->stream_index == videoStreamIndex) {
       // Decode video packet
-      int response = avcodec_send_packet(codecContext, &packet);
+      int response = avcodec_send_packet(codecContext, packet);
       if (response < 0) {
         std::cerr << "Failed to decode video packet" << std::endl;
         break;
@@ -151,8 +157,9 @@ int main() {
       }
     }
 
-    av_packet_unref(&packet);
+    av_packet_unref(packet);
   }
+  av_packet_free(&packet);
 
   // Clean up resources
   av_freep(&buffer);
