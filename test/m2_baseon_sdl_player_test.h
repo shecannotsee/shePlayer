@@ -22,12 +22,6 @@ namespace m2_baseon_sdl_player_test {
 
 int main() {
   //FFmpeg
-  AVFormatContext	*pFormatCtx;
-  int				i, videoindex;
-  AVCodecContext	*pCodecCtx;
-  const AVCodec			*pCodec;
-  AVFrame	*pFrame,*pFrameYUV;
-  AVPacket *packet;
   struct SwsContext *img_convert_ctx;
   //SDL
   int screen_w,screen_h;
@@ -40,11 +34,9 @@ int main() {
   int ret, got_picture;
   char filepath[]="bigbuckbunny_480x272.h265";
 
-//  av_register_all();
   avformat_network_init();
 
-  pFormatCtx = avformat_alloc_context();
-
+  AVFormatContext	*pFormatCtx= avformat_alloc_context();
   if(avformat_open_input(&pFormatCtx,filepath,NULL,NULL)!=0){
     printf("Couldn't open input stream.\n");
     return -1;
@@ -53,76 +45,79 @@ int main() {
     printf("Couldn't find stream information.\n");
     return -1;
   }
-  videoindex=-1;
-  for(i=0; i<pFormatCtx->nb_streams; i++)
-    if(pFormatCtx->streams[i]->codecpar->codec_type==AVMEDIA_TYPE_VIDEO){
-      videoindex=i;
+  int videoindex = -1;
+  for(int i=0; i<pFormatCtx->nb_streams; i++) {
+    if (pFormatCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+      videoindex = i;
       break;
     }
+  }
   if(videoindex==-1){
     printf("Didn't find a video stream.\n");
     return -1;
   }
 
-  pCodecCtx = avcodec_alloc_context3(NULL);
-  if (!pCodecCtx) {
-    printf("Failed to allocate AVCodecContext.\n");
-    return -1;
+  AVCodecContext	*pCodecCtx = avcodec_alloc_context3(NULL);/* check */{
+    if (!pCodecCtx) {
+      printf("Failed to allocate AVCodecContext.\n");
+      return -1;
+    }
   }
-
-  ret = avcodec_parameters_to_context(pCodecCtx, pFormatCtx->streams[videoindex]->codecpar);
-  if (ret < 0) {
-    printf("Failed to copy codec parameters to context.\n");
-    return -1;
+  ret = avcodec_parameters_to_context(pCodecCtx, pFormatCtx->streams[videoindex]->codecpar);/* check */ {
+    if (ret < 0) {
+      printf("Failed to copy codec parameters to context.\n");
+      return -1;
+    }
   }
-  pCodec=avcodec_find_decoder(pCodecCtx->codec_id);
-  if(pCodec==NULL){
-    printf("Codec not found.\n");
-    return -1;
+  const AVCodec* pCodec = avcodec_find_decoder(pCodecCtx->codec_id);/* check */ {
+    if (pCodec == NULL) {
+      printf("Codec not found.\n");
+      return -1;
+    }
   }
   if(avcodec_open2(pCodecCtx, pCodec,NULL)<0){
     printf("Could not open codec.\n");
     return -1;
   }
 
-  pFrame=av_frame_alloc();
-  pFrameYUV=av_frame_alloc();
+  AVFrame* pFrame = av_frame_alloc();
+  AVFrame* pFrameYUV = av_frame_alloc();
   //uint8_t *out_buffer=(uint8_t *)av_malloc(avpicture_get_size(PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height));
   //avpicture_fill((AVPicture *)pFrameYUV, out_buffer, PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height);
+
   //SDL----------------------------
-  if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
-    printf( "Could not initialize SDL - %s\n", SDL_GetError());
-    return -1;
-  }
-
-
+  {
+    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_TIMER)) {
+      printf("Could not initialize SDL - %s\n", SDL_GetError());
+      return -1;
+    }
 
 #if SHOW_FULLSCREEN
-  vi = SDL_GetVideoInfo();
-	screen_w = vi->current_w;
-	screen_h = vi->current_h;
-	screen = SDL_SetVideoMode(screen_w, screen_h, 0,SDL_FULLSCREEN);
+    vi = SDL_GetVideoInfo();
+      screen_w = vi->current_w;
+      screen_h = vi->current_h;
+      screen = SDL_SetVideoMode(screen_w, screen_h, 0,SDL_FULLSCREEN);
 #else
-  screen_w = pCodecCtx->width;
-  screen_h = pCodecCtx->height;
-  screen = SDL_SetVideoMode(screen_w, screen_h, 0,0);
+    screen_w = pCodecCtx->width;
+    screen_h = pCodecCtx->height;
+    screen = SDL_SetVideoMode(screen_w, screen_h, 0, 0);
 #endif
 
-  if(!screen) {
-    printf("SDL: could not set video mode - exiting:%s\n",SDL_GetError());
-    return -1;
+    if (!screen) {
+      printf("SDL: could not set video mode - exiting:%s\n", SDL_GetError());
+      return -1;
+    }
+
+    bmp = SDL_CreateYUVOverlay(pCodecCtx->width, pCodecCtx->height, SDL_YV12_OVERLAY, screen);
+
+    rect.x = 0;
+    rect.y = 0;
+    rect.w = screen_w;
+    rect.h = screen_h;
   }
-
-  bmp = SDL_CreateYUVOverlay(pCodecCtx->width, pCodecCtx->height,SDL_YV12_OVERLAY, screen);
-
-  rect.x = 0;
-  rect.y = 0;
-  rect.w = screen_w;
-  rect.h = screen_h;
   //SDL End------------------------
 
-
-  packet=(AVPacket *)av_malloc(sizeof(AVPacket));
+  AVPacket *packet = (AVPacket *)av_malloc(sizeof(AVPacket));
   //Output Information-----------------------------
   printf("------------- File Information ------------------\n");
   av_dump_format(pFormatCtx,0,filepath,0);
@@ -139,8 +134,6 @@ int main() {
   while(av_read_frame(pFormatCtx, packet)>=0){
     if(packet->stream_index==videoindex){
       //Decode
-
-
       ret = avcodec_send_packet(pCodecCtx, packet);
       if (ret < 0 && ret != AVERROR(EAGAIN) && ret != AVERROR_EOF) {
         av_packet_unref(packet);
