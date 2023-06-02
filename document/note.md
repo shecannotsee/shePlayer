@@ -10,10 +10,34 @@
 
 #### 运行问题
 
+安装sdl1.2
+
+```bash
+git clone https://github.com/libsdl-org/SDL-1.2.git
+cd SDL-1.2
+./configure
+make -j8
+sudo make install
+```
+
+安装sdl2
+
+```bash
+git clone https://github.com/libsdl-org/SDL.git -b SDL2
+cd SDL
+./configure
+make
+sudo make install
+```
+
 使用以下命令编译后
 
 ```bash
-./configure --prefix=/home/shecannotsee/desktop/all_code/libraries/ffmpeg-5.1.3 --enable-shared
+# --enable-shared # 编译动态库
+# --enable-libzvbi # 将libz编译需要使用 sudo apt-get install libzvbi-dev
+# --enable-sdl
+# --enable-sdl2
+./configure --prefix=/home/shecannotsee/desktop/all_code/libraries/ffmpeg-5.1.3 --enable-sdl --enable-sdl2 --enable-libzvbi
 make 
 make install 
 ```
