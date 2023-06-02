@@ -7,7 +7,7 @@
 
 class base {
  public:
-  static void add(int ,int);
+  static int add(int ,int);
 };
 
 #endif //SHEPLAYER_SRC_BASE_H_
