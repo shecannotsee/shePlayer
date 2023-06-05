@@ -43,7 +43,8 @@ endif ()
 get_filename_component(cmake_upper_path ${CMAKE_SOURCE_DIR} DIRECTORY)
 # message(STATUS "cmake_upper_path's path:${cmake_upper_path}")
 set(libraries ${CMAKE_SOURCE_DIR}/third_party)
-set(ffmpeg ${libraries}/ffmpeg-5.1.3)
+#set(ffmpeg ${libraries}/ffmpeg-5.1.3)
+set(ffmpeg ${libraries}/ffmpeg-4.3.6)
 
 ########################################################################################################################
 
