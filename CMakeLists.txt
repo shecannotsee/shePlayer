@@ -45,15 +45,18 @@ get_filename_component(cmake_upper_path ${CMAKE_SOURCE_DIR} DIRECTORY)
 set(libraries ${CMAKE_SOURCE_DIR}/third_party)
 #set(ffmpeg ${libraries}/ffmpeg-5.1.3)
 set(ffmpeg ${libraries}/ffmpeg-4.3.6)
+set(SDL2 ${libraries}/SDL2)
 
 ########################################################################################################################
 
 # include
 include_directories(${CMAKE_SOURCE_DIR}/src
-        ${ffmpeg}/include)
+        ${ffmpeg}/include
+        ${SDL2}/include)
 # lib
 link_directories(
-        ${ffmpeg}/lib)
+        ${ffmpeg}/lib
+        ${SDL2}/lib)
 
 ########################################################################################################################
 
@@ -67,7 +70,7 @@ target_link_libraries(${test_name} "-pthread"
         -Wl,--start-group
         avcodec avfilter avformat avutil avdevice swresample swscale
         -Wl,--end-group
-        z
+        z SDL2
         )
 
 # lib target
