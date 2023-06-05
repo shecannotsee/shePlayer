@@ -52,7 +52,7 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt, const
 }
 
 void main() {
-  const char* filename    = "xx.mpg";
+  const char* filename    = "bigbuckbunny_480x272.h265";
   const char* outfilename = "output.s";
 
   uint8_t inbuf[INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];/* init */ {
@@ -61,7 +61,7 @@ void main() {
   };
 
   // 查找 MPEG-1 视频解码器
-  const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_MPEG1VIDEO);/* check */ {
+  const AVCodec *codec = avcodec_find_decoder(AV_CODEC_ID_HEVC);/* check */ {
     if (!codec) {
       fprintf(stderr, "Codec not found\n");
       exit(1);
