@@ -66,6 +66,7 @@ void main() {
   AVFrame* frame = av_frame_alloc();
   AVFrame* frameRGB = av_frame_alloc();
 
+  // 分配帧数据缓冲区
   int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, codecContext->width, codecContext->height, 1);
   uint8_t* buffer = (uint8_t*)av_malloc(numBytes * sizeof(uint8_t));
 
@@ -76,6 +77,7 @@ void main() {
   AVPacket packet;
   while (av_read_frame(formatContext, &packet) >= 0) {
     if (packet.stream_index == videoStreamIndex) {
+      // 将数据包发送给解码器进行解码处理
       avcodec_send_packet(codecContext, &packet);
       int ret;
       while (ret >= 0) {
