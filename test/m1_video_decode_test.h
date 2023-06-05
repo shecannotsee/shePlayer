@@ -53,7 +53,7 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt, const
 
 void main() {
   const char* filename    = "bigbuckbunny_480x272.h265";
-  const char* outfilename = "output.s";
+  const char* outfilename = "./output/output.s";
 
   uint8_t inbuf[INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];/* init */ {
     // 将缓冲区结束设置为 0（这可确保损坏的 MPEG 流不会发生过度读取）
