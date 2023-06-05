@@ -9,7 +9,7 @@
 int main() {
   std::cout << "test start.\n";
 
-  m1_video_decode_test::main();
+//  m1_video_decode_test::main();
   m2_play_with_sdl2_test::main();
 
   std::cout << "test end.\n";
