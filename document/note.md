@@ -30,6 +30,12 @@ make
 sudo make install
 ```
 
+在新的机器上还需要
+
+```
+sudo apt install nasm
+```
+
 使用以下命令编译后
 
 ```bash
