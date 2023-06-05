@@ -66,7 +66,7 @@ target_link_libraries(${test_name} "-pthread"
         -Wl,--start-group
         avcodec avfilter avformat avutil avdevice swresample swscale
         -Wl,--end-group
-        z zvbi SDL SDL2
+        z
         )
 
 # lib target
