@@ -28,6 +28,20 @@ void main() {
     }
   }
 
+  // 在文件中查找视频流
+  int videoStreamIndex = -1;/* find stream */ {
+    for (unsigned int i = 0; i < formatContext->nb_streams; i++) {
+      if (formatContext->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
+        videoStreamIndex = i;
+        break;
+      }
+    }
+
+    if (videoStreamIndex == -1) {
+      std::cerr << "Could not find video stream." << std::endl;
+      return;
+    }
+  }
 
 
   std::cout << "good.\n";
