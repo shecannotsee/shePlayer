@@ -9,6 +9,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libswscale/swscale.h>
+#include <libavutil/imgutils.h>
 }
 #include <iostream>
 
@@ -62,7 +63,42 @@ void main() {
     return ;
   }
 
+  AVFrame* frame = av_frame_alloc();
+  AVFrame* frameRGB = av_frame_alloc();
 
+  int numBytes = av_image_get_buffer_size(AV_PIX_FMT_RGB24, codecContext->width, codecContext->height, 1);
+  uint8_t* buffer = (uint8_t*)av_malloc(numBytes * sizeof(uint8_t));
+
+  av_image_fill_arrays(frameRGB->data, frameRGB->linesize, buffer, AV_PIX_FMT_RGB24, codecContext->width, codecContext->height, 1);
+
+  SwsContext* swsContext = sws_getContext(codecContext->width, codecContext->height, codecContext->pix_fmt, codecContext->width, codecContext->height, AV_PIX_FMT_RGB24, SWS_BILINEAR, nullptr, nullptr, nullptr);
+
+  AVPacket packet;
+  while (av_read_frame(formatContext, &packet) >= 0) {
+    if (packet.stream_index == videoStreamIndex) {
+      avcodec_send_packet(codecContext, &packet);
+      int ret;
+      while (ret >= 0) {
+        ret = avcodec_receive_frame(codecContext, frame);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+          break;
+        else if (ret < 0) {
+          std::cerr << "Error during decoding." << std::endl;
+          return ;
+        }
+        sws_scale(swsContext, frame->data, frame->linesize, 0, codecContext->height, frameRGB->data, frameRGB->linesize);
+        // 在此处使用你自己的显示逻辑来显示帧（例如使用OpenGL、SDL等库）
+      }
+    }
+    av_packet_unref(&packet);
+  }
+
+
+  sws_freeContext(swsContext);
+  av_frame_free(&frameRGB);
+  av_frame_free(&frame);
+  avcodec_free_context(&codecContext);
+  avformat_close_input(&formatContext);
 
 
   std::cout << "good.\n";
