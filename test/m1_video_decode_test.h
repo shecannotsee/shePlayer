@@ -55,11 +55,6 @@ void main() {
   const char* filename    = "xx.mpg";
   const char* outfilename = "output.s";
 
-  AVPacket* pkt = av_packet_alloc();/* check */ {
-    if (!pkt)
-      exit(1);
-  };
-
   uint8_t inbuf[INBUF_SIZE + AV_INPUT_BUFFER_PADDING_SIZE];/* init */ {
     // 将缓冲区结束设置为 0（这可确保损坏的 MPEG 流不会发生过度读取）
     memset(inbuf + INBUF_SIZE, 0, AV_INPUT_BUFFER_PADDING_SIZE);
@@ -95,8 +90,8 @@ void main() {
     exit(1);
   }
 
-  FILE* f= fopen(filename, "rb");/* check */ {
-    if (!f) {
+  FILE* file= fopen(filename, "rb");/* check */ {
+    if (!file) {
       fprintf(stderr, "Could not open %s\n", filename);
       exit(1);
     }
@@ -109,14 +104,18 @@ void main() {
     }
   };
 
+  AVPacket* pkt = av_packet_alloc();/* check */ {
+    if (!pkt)
+      exit(1);
+  };
   uint8_t* data;
   size_t   data_size;
   int ret;
   int eof;
   do {
     // 从输入文件中读取原始数据
-    data_size = fread(inbuf, 1, INBUF_SIZE, f);
-    if (ferror(f)) {
+    data_size = fread(inbuf, 1, INBUF_SIZE, file);
+    if (ferror(file)) {
       break;
     }
     eof = !data_size;
@@ -145,7 +144,7 @@ void main() {
   // 刷新解码器
   decode(codecCtx, frame, NULL, outfilename);
 
-  fclose(f);
+  fclose(file);
 
   av_parser_close(parser);
   avcodec_free_context(&codecCtx);
