@@ -52,9 +52,8 @@ static void decode(AVCodecContext *dec_ctx, AVFrame *frame, AVPacket *pkt, const
 }
 
 void main() {
-
   const char* filename    = "xx.mpg";
-  const char* outfilename = "output.z";
+  const char* outfilename = "output.s";
 
   AVPacket* pkt = av_packet_alloc();/* check */ {
     if (!pkt)
@@ -81,8 +80,8 @@ void main() {
     }
   };
 
-  AVCodecContext* c = avcodec_alloc_context3(codec);/* check */ {
-    if (!c) {
+  AVCodecContext* codecCtx = avcodec_alloc_context3(codec);/* check */ {
+    if (!codecCtx) {
       fprintf(stderr, "Could not allocate video codec context\n");
       exit(1);
     }
@@ -91,7 +90,7 @@ void main() {
   // 对于某些编解码器，例如 msmpeg4 和 mpeg4，必须在此处初始化宽度和高度，因为此信息在比特流中不可用。
 
   /* open it */
-  if (avcodec_open2(c, codec, NULL) < 0) {
+  if (avcodec_open2(codecCtx, codec, NULL) < 0) {
     fprintf(stderr, "Could not open codec\n");
     exit(1);
   }
@@ -110,21 +109,22 @@ void main() {
     }
   };
 
-  uint8_t *data;
+  uint8_t* data;
   size_t   data_size;
   int ret;
   int eof;
   do {
     // 从输入文件中读取原始数据
     data_size = fread(inbuf, 1, INBUF_SIZE, f);
-    if (ferror(f))
+    if (ferror(f)) {
       break;
+    }
     eof = !data_size;
 
     // 使用解析器将数据拆分为帧
     data = inbuf;
     while (data_size > 0 || eof) {
-      ret = av_parser_parse2(parser, c, &pkt->data, &pkt->size,
+      ret = av_parser_parse2(parser, codecCtx, &pkt->data, &pkt->size,
                              data, data_size, AV_NOPTS_VALUE, AV_NOPTS_VALUE, 0);
       if (ret < 0) {
         fprintf(stderr, "Error while parsing\n");
@@ -133,20 +133,22 @@ void main() {
       data      += ret;
       data_size -= ret;
 
-      if (pkt->size)
-        decode(c, frame, pkt, outfilename);
-      else if (eof)
+      if (pkt->size) {
+        decode(codecCtx, frame, pkt, outfilename);
+      }
+      else if (eof) {
         break;
+      }
     }
   } while (!eof);
 
   // 刷新解码器
-  decode(c, frame, NULL, outfilename);
+  decode(codecCtx, frame, NULL, outfilename);
 
   fclose(f);
 
   av_parser_close(parser);
-  avcodec_free_context(&c);
+  avcodec_free_context(&codecCtx);
   av_frame_free(&frame);
   av_packet_free(&pkt);
 };// int main()
