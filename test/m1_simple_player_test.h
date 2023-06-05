@@ -16,7 +16,7 @@ namespace m1_simple_player_test {
 
 void main() {
   // 读取文件
-  AVFormatContext* formatContext = nullptr;/* read from file */ {
+  AVFormatContext* formatContext = nullptr;/* read from file and check */ {
     if (avformat_open_input(&formatContext, "xx.h265", nullptr, nullptr) != 0) {
       std::cerr << "Could not open file." << std::endl;
       return;
@@ -42,6 +42,27 @@ void main() {
       return;
     }
   }
+
+  // 获取视频解码器
+  const AVCodec* codec = avcodec_find_decoder(formatContext->streams[videoStreamIndex]->codecpar->codec_id);
+  if (codec == nullptr) {
+    std::cerr << "Unsupported codec." << std::endl;
+    return ;
+  }
+  // 为解码器分配上下文
+  AVCodecContext* codecContext = avcodec_alloc_context3(codec);
+  // 将编码器参数拷贝到解码器上下文中
+  if (avcodec_parameters_to_context(codecContext, formatContext->streams[videoStreamIndex]->codecpar) != 0) {
+    std::cerr << "Failed to copy codec parameters to decoder context." << std::endl;
+    return ;
+  }
+  // 打开解码器
+  if (avcodec_open2(codecContext, codec, nullptr) < 0) {
+    std::cerr << "Failed to open codec." << std::endl;
+    return ;
+  }
+
+
 
 
   std::cout << "good.\n";
