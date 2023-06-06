@@ -119,7 +119,6 @@ void main() {
   };
 
   SDL_Thread* p_sdl_thread = nullptr;
-  SDL_Event sdl_event;
   /* 刷新线程处理 */ {
     p_sdl_thread = SDL_CreateThread([](void*)->int {
       g_sfp_refresh_thread_exit = false;
@@ -147,6 +146,7 @@ void main() {
   AVFrame* pFrame = nullptr;/* init */ {
     pFrame = av_frame_alloc();
   };
+  SDL_Event sdl_event;
   /* show */ {
     while (true) {
       int ret = 0;
