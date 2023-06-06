@@ -16,7 +16,7 @@ extern "C" {
 
 namespace m2_play_with_sdl2_test {
 
-const std::string file_path = "./xx.mpeg";
+const std::string file_path = "./xx.mpg";
 int g_frame_rate = 0;// 帧率
 bool g_sfp_refresh_thread_exit = false;
 bool g_sfp_refresh_thread_pause = false;
@@ -106,8 +106,8 @@ void main() {
   SDL_Thread* p_sdl_thread = nullptr;
   SDL_Event sdl_event;
   /* 初始化sdl */ {
-    if (SDL_Init( SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_TIMER)!=0) {
-      std::cout << RED_COLOR << "SDL init error.\n" << RESET_COLOR;
+    if (SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)!=0) {
+      std::cout << RED_COLOR << "SDL init error.\n" << SDL_GetError() << RESET_COLOR;
       exit(1);
     }
   };
