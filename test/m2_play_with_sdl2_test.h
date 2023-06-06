@@ -212,26 +212,28 @@ void main() {
   };
 
 end:
-  if (pCodecCtx) {
-    avcodec_close(pCodecCtx);
-  }
-  if (pCodecCtx) {
-    avcodec_free_context(&pCodecCtx);
-  }
-  if (pFormatCtx) {
-    avformat_close_input(&pFormatCtx);
-  }
-  if (pFormatCtx) {
-    avformat_free_context(pFormatCtx);
-  }
-  av_packet_free(&packet);
-  av_frame_free(&pFrame);
-  av_frame_free(&pFrameYUV);
+  /* 释放申请的资源 */ {
+    if (pCodecCtx) {
+      avcodec_close(pCodecCtx);
+    }
+    if (pCodecCtx) {
+      avcodec_free_context(&pCodecCtx);
+    }
+    if (pFormatCtx) {
+      avformat_close_input(&pFormatCtx);
+    }
+    if (pFormatCtx) {
+      avformat_free_context(pFormatCtx);
+    }
+    av_packet_free(&packet);
+    av_frame_free(&pFrame);
+    av_frame_free(&pFrameYUV);
 
-  SDL_DestroyTexture(p_sdl_texture);
-  SDL_DestroyRenderer(p_sdl_renderer);
-  SDL_DestroyWindow(p_sdl_window);
-  SDL_Quit();
+    SDL_DestroyTexture(p_sdl_texture);
+    SDL_DestroyRenderer(p_sdl_renderer);
+    SDL_DestroyWindow(p_sdl_window);
+    SDL_Quit();
+  };
 
 };
 
