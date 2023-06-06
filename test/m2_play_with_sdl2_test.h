@@ -91,18 +91,16 @@ void main() {
   };
 
   // sdl param
-  SDL_Window* p_sdl_window = nullptr;
-  SDL_Renderer* p_sdl_renderer = nullptr;
-  SDL_Texture* p_sdl_texture = nullptr;
   SDL_Rect sdl_rect;
-  SDL_Thread* p_sdl_thread = nullptr;
-  SDL_Event sdl_event;
   /* 初始化sdl */ {
     if (SDL_Init( SDL_INIT_VIDEO | SDL_INIT_TIMER)!=0) {
       std::cout << RED_COLOR << "SDL init error.\n" << SDL_GetError() << RESET_COLOR;
       exit(1);
     }
   };
+  SDL_Window* p_sdl_window = nullptr;
+  SDL_Renderer* p_sdl_renderer = nullptr;
+  SDL_Texture* p_sdl_texture = nullptr;
   /* 创建窗口 */ {
     p_sdl_window = SDL_CreateWindow("shePlayer",
                                     SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
@@ -118,25 +116,29 @@ void main() {
     sdl_rect.y = 0;
     sdl_rect.w = pCodecCtx->width;
     sdl_rect.h = pCodecCtx->height;
-    // 刷新线程
+  };
+
+  SDL_Thread* p_sdl_thread = nullptr;
+  SDL_Event sdl_event;
+  /* 刷新线程处理 */ {
     p_sdl_thread = SDL_CreateThread([](void*)->int {
-        g_sfp_refresh_thread_exit = false;
-        g_sfp_refresh_thread_pause = false;
-        while (!g_sfp_refresh_thread_exit) {
-          if (!g_sfp_refresh_thread_pause) {
-            SDL_Event sdl_event;
-            sdl_event.type = SFM_REFRESH_EVENT;
-            SDL_PushEvent(&sdl_event);
-          }
-          SDL_Delay(1000 / g_frame_rate);
-        };
-        g_sfp_refresh_thread_exit = false;
-        g_sfp_refresh_thread_pause = false;
-        SDL_Event  sdl_event;
-        sdl_event.type = SFM_BREAK_EVENT;
-        SDL_PushEvent(&sdl_event);
-        return 0;
-      }, NULL, NULL);
+      g_sfp_refresh_thread_exit = false;
+      g_sfp_refresh_thread_pause = false;
+      while (!g_sfp_refresh_thread_exit) {
+        if (!g_sfp_refresh_thread_pause) {
+          SDL_Event sdl_event;
+          sdl_event.type = SFM_REFRESH_EVENT;
+          SDL_PushEvent(&sdl_event);
+        }
+        SDL_Delay(1000 / g_frame_rate);
+      };
+      g_sfp_refresh_thread_exit = false;
+      g_sfp_refresh_thread_pause = false;
+      SDL_Event  sdl_event;
+      sdl_event.type = SFM_BREAK_EVENT;
+      SDL_PushEvent(&sdl_event);
+      return 0;
+    }, NULL, NULL);
   };
 
   AVPacket* packet = nullptr;/* init */ {
