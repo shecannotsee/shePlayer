@@ -24,37 +24,20 @@ bool g_sfp_refresh_thread_pause = false;
 #define SFM_BREAK_EVENT   (SDL_USEREVENT+2)
 
 void main() {
-  // ffmpeg param
-  AVFormatContext* pFormatCtx = nullptr;/* init */ {
-    pFormatCtx = avformat_alloc_context();
-  };
-  AVCodecContext* pCodecCtx = nullptr;
-  const AVCodec* pCodec = nullptr;
-  AVPacket* packet = nullptr;/* init */ {
-    packet = av_packet_alloc();
-  };
-  AVFrame* pFrame = nullptr;/* init */ {
-    pFrame = av_frame_alloc();
-  };
-  AVFrame* pFrameYUV = nullptr;/* init */ {
-    pFrameYUV = av_frame_alloc();
-  };
-  SwsContext* pSwsCtx = nullptr;
-  unsigned char* out_buffer = nullptr;
-  int out_buffer_size = 0;
-  int video_index = -1;
 
   /* 初始化,后续版本不再使用,也可以不写该行 */ {
     avformat_network_init();
   }
 
+  AVFormatContext* pFormatCtx = nullptr;/* init */ {
+    pFormatCtx = avformat_alloc_context();
+  };
   /* 打开输入流 */ {
     if (avformat_open_input(&pFormatCtx,file_path.c_str(),NULL,NULL) != NULL) {
       std::cout << RED_COLOR << "avformat_open_input error.\n" << RESET_COLOR;
       exit(1);
     }
   }
-
   /* 查找流信息 */ {
     if (avformat_find_stream_info(pFormatCtx, NULL) < 0) {
       std::cout << RESET_COLOR << "avformat_find_stream_info errpr.\n" << RESET_COLOR;
@@ -62,6 +45,9 @@ void main() {
     }
   };
 
+  const AVCodec* pCodec = nullptr;
+  AVCodecContext* pCodecCtx = nullptr;
+  int video_index = -1;
   /* 查找编码解码器 */ {
     for (int i=0; i < pFormatCtx->nb_streams; i++) {
       AVStream* pStream = pFormatCtx->streams[i];
@@ -86,12 +72,18 @@ void main() {
     }
   };
 
+  SwsContext* pSwsCtx = nullptr;
   /* 变换,将解码后的数据转换成指定格式,将原始数据(可能是RGB24,YUV其他格式)转为YUV420P */ {
     pSwsCtx = sws_getContext(pCodecCtx->width,pCodecCtx->height,pCodecCtx->pix_fmt,
                              pCodecCtx->width,pCodecCtx->height,AV_PIX_FMT_YUV420P,
                              SWS_BICUBIC,NULL,NULL,NULL);
   };
 
+  unsigned char* out_buffer = nullptr;
+  int out_buffer_size = 0;
+  AVFrame* pFrameYUV = nullptr;/* init */ {
+    pFrameYUV = av_frame_alloc();
+  };
   /* 用buffer来存储转换成目标格式的数据 */ {
     out_buffer_size = av_image_get_buffer_size(AV_PIX_FMT_YUV420P, pCodecCtx->width, pCodecCtx->height, 1);
     out_buffer = (unsigned char*) av_malloc(out_buffer_size);
@@ -147,6 +139,12 @@ void main() {
       }, NULL, NULL);
   };
 
+  AVPacket* packet = nullptr;/* init */ {
+    packet = av_packet_alloc();
+  };
+  AVFrame* pFrame = nullptr;/* init */ {
+    pFrame = av_frame_alloc();
+  };
   /* show */ {
     while (true) {
       int ret = 0;
