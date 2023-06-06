@@ -30,9 +30,11 @@ make
 sudo make install
 ```
 
+ps:编译安装sdl2的时候请注意版本问题,最好使用已经发布的release,否则可能出现未知bug(例如在ubuntu22.04无法显示窗口的问题),并注意版本的兼容问题
+
 在新的机器上还需要
 
-```
+```bash
 sudo apt install nasm
 ```
 
