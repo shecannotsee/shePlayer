@@ -5,6 +5,8 @@
 #ifndef SHEPLAYER_M2_PLAY_WITH_SDL2_TEST_H
 #define SHEPLAYER_M2_PLAY_WITH_SDL2_TEST_H
 
+#include <string>
+#include <iostream>
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
