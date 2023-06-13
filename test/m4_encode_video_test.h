@@ -95,7 +95,8 @@ void main() {
   };
   // encode 5 seconds of video
   for (int i = 0; i < 25 * 5; i++) {
-    std::string input_file = "./output/output.s-"+std::to_string(i);
+    std::string input_file = "./output/output.s-"+std::to_string(i+1);
+    std::cout << YELLOW_COLOR << input_file << RESET_COLOR << std::endl;
     // 添加yuv文件的数据
     FILE* p_input_f = fopen(input_file.c_str(), "rb");
     if (!p_input_f) {
