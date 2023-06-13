@@ -46,8 +46,8 @@ void main() {
     }
     // 设置 AVCodecContext 参数
     pCodecCtx->bit_rate = 400000;// 比特率
-    pCodecCtx->width = 352;// 宽
-    pCodecCtx->height = 288;// 高
+    pCodecCtx->width = 720;// 宽
+    pCodecCtx->height = 240;// 高
     pCodecCtx->time_base = { 1, 25 };
     pCodecCtx->framerate = { 25, 1 };
     /* emit one intra frame every ten frames
@@ -95,31 +95,6 @@ void main() {
   };
   // encode 5 seconds of video
   for (int i = 0; i < 25 * 5; i++) {
-    std::string input_file = "./output/output.s-"+std::to_string(i+1);
-    std::cout << YELLOW_COLOR << input_file << RESET_COLOR << std::endl;
-    // 添加yuv文件的数据
-    FILE* p_input_f = fopen(input_file.c_str(), "rb");
-    if (!p_input_f) {
-      std::cout << RED_COLOR << "Failed to open input file." << RESET_COLOR << std::endl;
-      exit(1);
-    }
-    // 读取Y数据
-    if (fread(pFrame->data[0], 1, pCodecCtx->width * pCodecCtx->height, p_input_f) != pCodecCtx->width * pCodecCtx->height) {
-      std::cout << RED_COLOR << "Failed to read Y data." << RESET_COLOR << std::endl;
-      exit(1);
-    }
-    // 读取U数据
-    if (fread(pFrame->data[1], 1, pCodecCtx->width * pCodecCtx->height / 4, p_input_f) != pCodecCtx->width * pCodecCtx->height / 4) {
-      std::cout << RED_COLOR << "Failed to read U data." << RESET_COLOR << std::endl;
-      exit(1);
-    }
-    // 读取V数据
-    if (fread(pFrame->data[2], 1, pCodecCtx->width * pCodecCtx->height / 4, p_input_f) != pCodecCtx->width * pCodecCtx->height / 4) {
-      std::cout << RED_COLOR << "Failed to read V data." << RESET_COLOR << std::endl;
-      exit(1);
-    }
-    fclose(p_input_f);
-
     fflush(stdout);
     // 确保帧数据可写
     if (av_frame_is_writable(pFrame) < 0) {
@@ -151,7 +126,7 @@ void main() {
   // 刷新编码器
   encode(pCodecCtx, NULL, pPacket, p_output_f);
   // 添加序列结束代码以具有真正的 MPEG 文件
-  unsigned char endcode[] = { 0x00, 0x00, 0x01, 0x7b };
+  unsigned char endcode[] = { 0x0, 0x00, 0x01, 0x7b };// 控制播放的颜色
   fwrite(endcode, 1, sizeof(endcode), p_output_f);
 
   fclose(p_output_f);
