@@ -14,13 +14,14 @@ extern "C" {
 
 namespace m4_encode_video_test {
 
-static void encode(AVCodecContext* pCodecCtx, AVFrame *pFrame, AVPacket* pPacket, FILE* p_output_f) {
+void encode(AVCodecContext* pCodecCtx, AVFrame *pFrame, AVPacket* pPacket, FILE* p_output_f) {
   int ret;
   ret = avcodec_send_frame(pCodecCtx, pFrame);
   while (ret >= 0) {
     ret = avcodec_receive_packet(pCodecCtx, pPacket);
-    if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF)
+    if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
       return;
+    }
     fwrite(pPacket->data, 1, pPacket->size, p_output_f);
     av_packet_unref(pPacket);
   }
@@ -28,8 +29,6 @@ static void encode(AVCodecContext* pCodecCtx, AVFrame *pFrame, AVPacket* pPacket
 
 void main() {
   unsigned char endcode[] = { 0x00, 0x00, 0x01, 0x7b };
-  int i, x, y;
-  int ret = 0;
 
   // 查找编码器
   const AVCodec* pCodec = avcodec_find_encoder_by_name("libx264");/* check */ {
@@ -85,7 +84,7 @@ void main() {
   }
 
   // 打开输出文件
-  FILE* p_output_f = fopen("asd.h264", "wb");/* check */ {
+  FILE* p_output_f = fopen("output.h264", "wb");/* check */ {
     if (!p_output_f) {
       std::cout << RED_COLOR << "open file failed.\n" << RESET_COLOR;
       exit(1);
@@ -93,7 +92,7 @@ void main() {
   };
 
   // encode 5 seconds of video
-  for (i = 0; i < 25 * 5; i++) {
+  for (int i = 0; i < 25 * 5; i++) {
     fflush(stdout);
     // 确保帧数据可写
     if (av_frame_is_writable(pFrame) < 0) {
@@ -102,14 +101,14 @@ void main() {
     }
 
     //Y
-    for (y = 0; y < pCodecCtx->height; y++) {
-      for (x = 0; x < pCodecCtx->width; x++) {
+    for (int y = 0; y < pCodecCtx->height; y++) {
+      for (int x = 0; x < pCodecCtx->width; x++) {
         pFrame->data[0][y*pFrame->linesize[0] + x] = x + y + i * 3;
       }
     }
     //Y and V
-    for (y = 0; y < pCodecCtx->height / 2; y++) {
-      for (x = 0; x < pCodecCtx->width / 2; x++) {
+    for (int y = 0; y < pCodecCtx->height / 2; y++) {
+      for (int x = 0; x < pCodecCtx->width / 2; x++) {
         pFrame->data[1][y * pFrame->linesize[1] + x] = 128 + y + i * 2;
         pFrame->data[2][y * pFrame->linesize[2] + x] = 64 + x + i * 5;
       }
@@ -121,15 +120,14 @@ void main() {
     encode(pCodecCtx, pFrame, pPacket, p_output_f);
   }
 
-  //flush the encoder
+  // 刷新编码器
   encode(pCodecCtx, NULL, pPacket, p_output_f);
 
-  //add sequence end code to have a real MPEG file
+  // 添加序列结束代码以具有真正的 MPEG 文件
   fwrite(endcode, 1, sizeof(endcode), p_output_f);
 
   fclose(p_output_f);
 
-end:
   /* release resources  */ {
     if (pCodecCtx) {
       avcodec_free_context(&pCodecCtx);
@@ -141,7 +139,6 @@ end:
       av_frame_free(&pFrame);
     }
   };
-
   std::cout << GREEN_COLOR << "=============== encode_yuv_to_h264 done ===============\n" << std::endl << RESET_COLOR;
 };
 
