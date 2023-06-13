@@ -57,3 +57,14 @@ sudo apt-get install zlib1g-dev
 ```
 
 并且需要在链接时加上libz库
+
+
+
+#### 编码问题
+
+若在编码时使用libx264，则需要在构建ffmpeg时开启libx264
+
+```bash
+./configure --enable-shared --enable-libx264 --enable-gpl --prefix=/home/shecannotsee/desktop/all_code/libraries/ffmpeg-4.3.6
+```
+
