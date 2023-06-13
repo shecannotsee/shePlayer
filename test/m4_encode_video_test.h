@@ -28,11 +28,9 @@ void encode(AVCodecContext* pCodecCtx, AVFrame *pFrame, AVPacket* pPacket, FILE*
 };
 
 void main() {
-  unsigned char endcode[] = { 0x00, 0x00, 0x01, 0x7b };
-
   // 查找编码器
   const AVCodec* pCodec = avcodec_find_encoder_by_name("libx264");/* check */ {
-    pCodec = avcodec_find_encoder(AV_CODEC_ID_H264);// other way
+    // pCodec = avcodec_find_encoder(AV_CODEC_ID_H264);// other way
     if (!pCodec) {
       std::cout << RED_COLOR << "avcodec_find_encoder_by_name error, codec_name=libx264\n" << RESET_COLOR;
       exit(1);
@@ -44,10 +42,10 @@ void main() {
       std::cout << RESET_COLOR <<"avcodec_alloc_context3 error, pCodecCtx is NULL\n" << RESET_COLOR;
       exit(1);
     }
-    //set AVCodecContext parameters
-    pCodecCtx->bit_rate = 400000;
-    pCodecCtx->width = 352;
-    pCodecCtx->height = 288;
+    // 设置 AVCodecContext 参数
+    pCodecCtx->bit_rate = 400000;// 比特率
+    pCodecCtx->width = 352;// 宽
+    pCodecCtx->height = 288;// 高
     pCodecCtx->time_base = { 1, 25 };
     pCodecCtx->framerate = { 25, 1 };
     /* emit one intra frame every ten frames
@@ -58,17 +56,17 @@ void main() {
      */
     pCodecCtx->gop_size = 10;
     pCodecCtx->max_b_frames = 1;
-    pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;
+    pCodecCtx->pix_fmt = AV_PIX_FMT_YUV420P;// 若编码的图像格式部位YUV420P则需要修稿
     if (pCodec->id == AV_CODEC_ID_H264) {
       av_opt_set(pCodecCtx->priv_data, "preset", "slow", 0);
     }
   };
 
-  AVPacket* pPacket = av_packet_alloc();
+  // 用来存编码前的数据
   AVFrame* pFrame = av_frame_alloc();/* init */ {
-    pFrame->format = pCodecCtx->pix_fmt;
-    pFrame->width = pCodecCtx->width;
-    pFrame->height = pCodecCtx->height;
+    pFrame->format = pCodecCtx->pix_fmt;// 格式
+    pFrame->width = pCodecCtx->width;// 宽
+    pFrame->height = pCodecCtx->height;// 高
   };
 
   // 打开编码器
@@ -91,6 +89,8 @@ void main() {
     }
   };
 
+  // 用来存编码后的数据
+  AVPacket* pPacket = av_packet_alloc();
   // encode 5 seconds of video
   for (int i = 0; i < 25 * 5; i++) {
     fflush(stdout);
@@ -100,7 +100,8 @@ void main() {
       exit(1);
     }
 
-    //Y
+    // 将数据填到pFrame里
+    // Y
     for (int y = 0; y < pCodecCtx->height; y++) {
       for (int x = 0; x < pCodecCtx->width; x++) {
         pFrame->data[0][y*pFrame->linesize[0] + x] = x + y + i * 3;
@@ -116,7 +117,7 @@ void main() {
 
     pFrame->pts = i;
 
-    // encode this img
+    // 编码成img
     encode(pCodecCtx, pFrame, pPacket, p_output_f);
   }
 
@@ -124,6 +125,7 @@ void main() {
   encode(pCodecCtx, NULL, pPacket, p_output_f);
 
   // 添加序列结束代码以具有真正的 MPEG 文件
+  unsigned char endcode[] = { 0x00, 0x00, 0x01, 0x7b };
   fwrite(endcode, 1, sizeof(endcode), p_output_f);
 
   fclose(p_output_f);
